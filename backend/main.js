@@ -8,9 +8,9 @@ app.use(cookieParser());
 app.use(cors());
 
 app.get('/setCookie', (req, res) => {
-  // res.header('Access-Control-Allow-Origin', 'http://your-frontend-domain.com');
+  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
   res.header('Access-Control-Allow-Credentials', true);
-  res.cookie('cookie', 'SDFASDF', { maxAge: 900000, httpOnly: true, secure: true });
+  res.cookie('cookie', 'my cookie, nhamis', { maxAge: 900000, httpOnly: true, secure: true });
   res.send('Cookie set successfully!');
 });
 
