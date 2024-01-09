@@ -17,6 +17,7 @@ export function Router() {
     const response = await api.post('/login', { user, password }, { withCredentials: true }, )
     const { access_token }: PostLoginResponse =  response.data
     api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+    api.post('/refresh_token', {}, { withCredentials: true }, )
   }
 
   return (
