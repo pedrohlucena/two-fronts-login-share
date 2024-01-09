@@ -10,6 +10,7 @@ app.use(cookieParser());
 app.use(cors({ origin: 'http://localhost:4000', credentials: true }));
 
 const database = {
+  access_tokens: [],
   refresh_tokens: []
 }
 
@@ -26,6 +27,7 @@ app.post('/login', (req, res) => {
       const refresh_token = uuid()
 
       res.cookie('@two-fronts-login-share:refresh_token', refresh_token, { maxAge: 900000, httpOnly: true, secure: true });
+      database.access_tokens.push(access_token)
       database.refresh_tokens.push(refresh_token)
       res.status(201).send({ access_token });
     } else {
@@ -46,6 +48,25 @@ app.post('/refresh_token', (req, res) => {
     if (validRefreshToken) {
       const access_token = generateAccessToken()
       res.status(201).send({ access_token });
+    }
+  } catch (error) {
+    console.error(error)
+  }
+});
+
+app.get('/users', (req, res) => {
+  try {
+    const headers = req.headers
+    const authorizationHeader = headers['authorization']
+
+    const access_token = authorizationHeader.replace('Bearer ', '')
+
+    const validAccessToken = database.access_tokens.includes(access_token)
+
+    if (validAccessToken) {
+      res.status(200).send({ items: ['user 1', 'user 2', 'user 3'] });
+    } else {
+      res.status(401).send({ message: "You are not authorized to access this resource." });
     }
   } catch (error) {
     console.error(error)
