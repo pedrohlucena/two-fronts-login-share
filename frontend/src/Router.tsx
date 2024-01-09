@@ -1,6 +1,7 @@
-import { Route, Routes } from "react-router-dom";
+import { useState } from "react";
+import { Route, Routes, useNavigate } from "react-router-dom";
 import { Login } from './pages/Login/Login';
-import { Page } from './pages/Page/Page';
+import { Users } from './pages/Users/Users';
 import { api } from "./services";
 
 export type PostLogin = {
@@ -13,17 +14,22 @@ export type PostLoginResponse = {
 }
 
 export function Router() {
+  const [isLogged, setIsLogged] = useState(false);
+  
+  const navigate = useNavigate();
+
   const handleLogin = async ({ user, password }: PostLogin) => {
-    const response = await api.post('/login', { user, password }, { withCredentials: true }, )
+    const response = await api.post('/login', { user, password } )
+    setIsLogged(response.status === 201)
     const { access_token }: PostLoginResponse =  response.data
     api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-    api.post('/refresh_token', {}, { withCredentials: true }, )
+    navigate('/users')
   }
 
   return (
     <Routes>
       <Route path="/login" element={<Login onLogin={handleLogin} />} />
-      <Route path="/page" element={<Page isLogged={false} />} />
+      <Route path="/users" element={<Users isLogged={isLogged} />} />
     </Routes>
   )
 }
