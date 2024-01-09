@@ -1,28 +1,37 @@
+const { v4: uuid } = require('uuid');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 
 const app = express();
 
+app.use(express.json())
 app.use(cookieParser());
-app.use(cors());
+app.use(cors({ origin: 'http://localhost:4000', credentials: true }));
 
-app.get('/setCookie', (req, res) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
-  res.header('Access-Control-Allow-Credentials', true);
-  res.cookie('cookie', 'my cookie, nhamis', { maxAge: 900000, httpOnly: true, secure: true });
-  res.send('Cookie set successfully!');
-});
+app.post('/login', (req, res) => {
+  try {
+    const { user, password } = req.body
 
-app.get('/getCookie', (req, res) => {
-  const myCookie = req.cookies.myCookie;
+    if (user === "pedrohlucena" && password === "123") {
+      const access_token = uuid()
+      const refresh_token = uuid()
 
-  if (myCookie) {
-    res.send(`Cookie value: ${myCookie}`);
-  } else {
-    res.send('Cookie not found!');
+      res.cookie('@two-fronts-login-share:refresh_token', refresh_token, { maxAge: 900000, httpOnly: true, secure: true });
+      res.status(201)
+        .send({ access_token });
+    } else {
+      res.status(401)
+        .send({
+          message: 'Invalid credentials'
+        })
+    }
+  } catch (error) {
+    console.log(error)
   }
 });
+
+app.get('/refresh_token', (req, res) => { });
 
 const port = 3000;
 
