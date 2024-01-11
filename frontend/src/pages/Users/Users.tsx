@@ -20,7 +20,10 @@ export function Users({ isLogged }: UsersProps) {
   }, [])
   
   return <S.UsersContainer>
-    {isLogged && <ul>{users.map(user => <li>{user}</li>)}</ul>}
+    {isLogged && <>
+      <ul>{users.map(user => <li>{user}</li>)}</ul>
+      <button onClick={getUsers}>get users</button>
+    </>}
     {!isLogged && <h1>Please, <NavLink to='/login'>login</NavLink> to see this page</h1>}
   </S.UsersContainer>
 }
