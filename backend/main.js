@@ -5,17 +5,32 @@ const cors = require('cors');
 
 const app = express();
 
+const origins = [
+  'http://localhost:4000',
+  'http://localhost:5000',
+  'http://127.0.0.1:4000',
+  'http://127.0.0.1:5000'
+]
+
 app.use(express.json())
 app.use(cookieParser());
-app.use(cors({ origin: 'http://localhost:4000', credentials: true }));
+app.use(cors({ origin: origins, credentials: true }));
 
 const database = {
   access_tokens: [],
   refresh_tokens: []
 }
 
+setInterval(() => {
+  database.access_tokens.length = 0;
+}, 5 * 1000);
+
 function generateAccessToken() {
   return uuid()
+}
+
+function saveAccessToken(access_token) {
+  database.access_tokens.push(access_token);
 }
 
 app.post('/login', (req, res) => {
@@ -26,9 +41,11 @@ app.post('/login', (req, res) => {
       const access_token = generateAccessToken()
       const refresh_token = uuid()
 
-      res.cookie('@two-fronts-login-share:refresh_token', refresh_token, { maxAge: 900000, httpOnly: true, secure: true });
-      database.access_tokens.push(access_token)
+      res.cookie('@two-fronts-login-share:refresh_token', refresh_token, { maxAge: 900000, httpOnly: true, secure: true, sameSite: 'none' });
+
       database.refresh_tokens.push(refresh_token)
+      saveAccessToken(access_token)
+
       res.status(201).send({ access_token });
     } else {
       res.status(401).send({ message: 'Invalid credentials' })
@@ -41,12 +58,14 @@ app.post('/login', (req, res) => {
 app.post('/refresh_token', (req, res) => {
   try {
     const cookies = req.cookies
+
     const sentRefreshToken = cookies['@two-fronts-login-share:refresh_token']
 
     const validRefreshToken = database.refresh_tokens.includes(sentRefreshToken)
 
     if (validRefreshToken) {
-      const access_token = generateAccessToken()
+      const access_token = generateAccessToken();
+      saveAccessToken(access_token);
       res.status(201).send({ access_token });
     }
   } catch (error) {
@@ -64,7 +83,7 @@ app.get('/users', (req, res) => {
     const validAccessToken = database.access_tokens.includes(access_token)
 
     if (validAccessToken) {
-      res.status(200).send({ items: ['user 1', 'user 2', 'user 3'] });
+      res.status(200).send({ items: [`user ${uuid()}`, `user ${uuid()}`, `user ${uuid()}`] });
     } else {
       res.status(401).send({ message: "You are not authorized to access this resource." });
     }
