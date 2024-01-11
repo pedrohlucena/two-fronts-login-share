@@ -23,7 +23,7 @@ const database = {
 
 setInterval(() => {
   database.access_tokens.length = 0;
-}, 5 * 1000);
+}, 100 * 1000);
 
 function generateAccessToken() {
   return uuid()
@@ -52,6 +52,7 @@ app.post('/login', (req, res) => {
     }
   } catch (error) {
     console.error(error)
+    res.status(500).send({ message: 'Internal Server Error' })
   }
 });
 
@@ -70,6 +71,7 @@ app.post('/refresh_token', (req, res) => {
     }
   } catch (error) {
     console.error(error)
+    res.status(500).send({ message: 'Internal Server Error' })
   }
 });
 
@@ -78,17 +80,25 @@ app.get('/users', (req, res) => {
     const headers = req.headers
     const authorizationHeader = headers['authorization']
 
+    if (!authorizationHeader) {
+      res.status(401).send({ message: "You are not authorized to access this resource." });
+      return;
+    }
+
     const access_token = authorizationHeader.replace('Bearer ', '')
 
     const validAccessToken = database.access_tokens.includes(access_token)
 
+    if (!validAccessToken) {
+      res.status(401).send({ message: "You are not authorized to access this resource." });
+    }
+
     if (validAccessToken) {
       res.status(200).send({ items: [`user ${uuid()}`, `user ${uuid()}`, `user ${uuid()}`] });
-    } else {
-      res.status(401).send({ message: "You are not authorized to access this resource." });
     }
   } catch (error) {
     console.error(error)
+    res.status(500).send({ message: 'Internal Server Error' })
   }
 });
 
