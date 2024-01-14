@@ -36,12 +36,20 @@ export const postRefreshToken: RequestHandler = (req, res, _) => {
         const cookies = req.cookies
         const sentRefreshToken = cookies['@two-fronts-login-share:refresh_token']
 
-        const validRefreshToken = database.refresh_tokens.includes(sentRefreshToken)
+        if(!sentRefreshToken) {
+            res.status(400).send({ message: 'refresh_token is missing' })
+            return;
+        }
 
-        if (validRefreshToken) {
+        const refreshTokenIsValid = database.refresh_tokens.includes(sentRefreshToken)
+
+        if (refreshTokenIsValid) {
             const access_token = generateAccessToken();
             saveAccessToken(access_token);
             res.status(201).send({ access_token });
+        } else {
+            res.status(400).send({ message: 'Invalid refresh_token' })
+            return;
         }
     } catch (error) {
         console.error(error)
